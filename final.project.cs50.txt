@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Scientific Unit Converter</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      direction: ltr;
+      padding: 20px;
+      background: #f4f4f4;
+    }
+    .container {
+      max-width: 450px;
+      margin: auto;
+      background: white;
+      padding: 15px 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 8px #ccc;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+    input[type="number"], select {
+      width: 100%;
+      padding: 8px;
+      margin-top: 6px;
+      border-radius: 4px;
+      border: 1px solid #aaa;
+      box-sizing: border-box;
+    }
+    button {
+      margin-top: 20px;
+      width: 100%;
+      padding: 10px;
+      background: #007bff;
+      color: white;
+      border: none;
+      font-size: 16px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    .result {
+      margin-top: 20px;
+      background: #e8f0fe;
+      padding: 12px;
+      border-radius: 6px;
+      font-weight: bold;
+      text-align: center;
+      min-height: 30px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Scientific Unit Converter</h2>
+
+    <label for="unitType">Select unit type:</label>
+    <select id="unitType" onchange="updateUnitOptions()">
+      <option value="length">Length units</option>
+      <option value="mass">Mass units</option>
+      <option value="time">Time units</option>
+      <option value="volume">Volume units</option>
+      <option value="temperature">Temperature units</option>
+      <option value="energy">Energy units</option>
+      <option value="force">Force units</option>
+      <option value="pressure">Pressure units</option>
+      <option value="speed">Speed units</option>
+      <option value="electricity">Electricity units</option>
+    </select>
+
+    <label for="valueInput">Enter value:</label>
+    <input type="number" id="valueInput" placeholder="Enter number" />
+
+    <label for="unitFrom">Select source unit:</label>
+    <select id="unitFrom"></select>
+
+    <label for="unitTo">Select target unit:</label>
+    <select id="unitTo"></select>
+
+    <button onclick="convert()">Convert Now</button>
+
+    <div class="result" id="resultBox"></div>
+
+    <hr style="margin:20px 0;">
+
+    <label for="constantSelect">Select a scientific constant to display its value:</label>
+    <select id="constantSelect" onchange="showConstant()">
+      <option value="">-- Select constant --</option>
+      <option value="c">Speed of light (c)</option>
+      <option value="h">Planck constant (h)</option>
+      <option value="e">Electron charge (e)</option>
+      <option value="G">Gravitational constant (G)</option>
+      <option value="NA">Avogadro's number (NA)</option>
+      <option value="u">Atomic mass unit (u)</option>
+      <option value="p">Standard atmosphere (p)</option>
+    </select>
+
+    <div class="result" id="constantValue"></div>
+  </div>
+
+<script>
+  const units = {
+    length: {
+      base: 'm',
+      units: { m: 1, km: 1000, cm: 0.01, mm: 0.001, inch: 0.0254, foot: 0.3048, yard: 0.9144, mile: 1609.344 },
+      names: { m: 'Meter (m)', km: 'Kilometer (km)', cm: 'Centimeter (cm)', mm: 'Millimeter (mm)', inch: 'Inch (inch)', foot: 'Foot (foot)', yard: 'Yard (yard)', mile: 'Mile (mile)' }
+    },
+    mass: {
+      base: 'kg',
+      units: { g: 0.001, kg: 1, mg: 0.000001, ton: 1000, ounce: 0.0283495, pound: 0.453592 },
+      names: { g: 'Gram (g)', kg: 'Kilogram (kg)', mg: 'Milligram (mg)', ton: 'Ton (ton)', ounce: 'Ounce (ounce)', pound: 'Pound (pound)' }
+    },
+    time: {
+      base: 's',
+      units: { s: 1, min: 60, h: 3600, day: 86400 },
+      names: { s: 'Second (s)', min: 'Minute (min)', h: 'Hour (h)', day: 'Day (day)' }
+    },
+    volume: {
+      base: 'L',
+      units: { L: 1, mL: 0.001, gallon: 3.78541, cup: 0.24, fluid_ounce: 0.0295735 },
+      names: { L: 'Liter (L)', mL: 'Milliliter (mL)', gallon: 'Gallon (gallon)', cup: 'Cup (cup)', fluid_ounce: 'Fluid ounce (fl oz)' }
+    },
+    temperature: {
+      base: 'C',
+      units: { C: 'C', F: 'F', K: 'K' },
+      names: { C: 'Celsius (°C)', F: 'Fahrenheit (°F)', K: 'Kelvin (K)' }
+    },
+    energy: {
+      base: 'J',
+      units: { J: 1, cal: 4.184, kWh: 3600000 },
+      names: { J: 'Joule (J)', cal: 'Calorie (cal)', kWh: 'Kilowatt-hour (kWh)' }
+    },
+    force: {
+      base: 'N',
+      units: { N: 1, dyne: 1e-5, lbf: 4.44822 },
+      names: { N: 'Newton (N)', dyne: 'Dyne (dyne)', lbf: 'Pound-force (lbf)' }
+    },
+    pressure: {
+      base: 'Pa',
+      units: { Pa: 1, bar: 100000, mmHg: 133.322, PSI: 6894.76 },
+      names: { Pa: 'Pascal (Pa)', bar: 'Bar (bar)', mmHg: 'mmHg (mmHg)', PSI: 'PSI' }
+    },
+    speed: {
+      base: 'm/s',
+      units: { 'm/s': 1, 'km/h': 0.277778, mph: 0.44704 },
+      names: { 'm/s': 'Meter/second (m/s)', 'km/h': 'Kilometer/hour (km/h)', mph: 'Mile/hour (mph)' }
+    },
+    electricity: {
+      base: 'V',
+      units: { V: 1, mV: 0.001, kV: 1000 },
+      names: { V: 'Volt (V)', mV: 'Millivolt (mV)', kV: 'Kilovolt (kV)' }
+    }
+  };
+
+  const constants = {
+    c: '299,792,458 m/s',
+    h: '6.62607015 × 10⁻³⁴ J·s',
+    e: '1.602176634 × 10⁻¹⁹ C',
+    G: '6.67430 × 10⁻¹¹ m³/kg·s²',
+    NA: '6.02214076 × 10²³ mol⁻¹',
+    u: '1.66053906660 × 10⁻²⁷ kg',
+    p: '101,325 Pa'
+  };
+
+  function updateUnitOptions() {
+    const type = document.getElementById('unitType').value;
+    const unitFrom = document.getElementById('unitFrom');
+    const unitTo = document.getElementById('unitTo');
+    unitFrom.innerHTML = '';
+    unitTo.innerHTML = '';
+    const names = units[type].names;
+    for (const key in names) {
+      unitFrom.innerHTML += `<option value="${key}">${names[key]}</option>`;
+      unitTo.innerHTML += `<option value="${key}">${names[key]}</option>`;
+    }
+    unitFrom.selectedIndex = 0;
+    unitTo.selectedIndex = 1;
+  }
+
+  function convert() {
+    const value = parseFloat(document.getElementById('valueInput').value);
+    const type = document.getElementById('unitType').value;
+    const fromUnit = document.getElementById('unitFrom').value;
+    const toUnit = document.getElementById('unitTo').value;
+    const resultBox = document.getElementById('resultBox');
+
+    if (isNaN(value)) {
+      resultBox.textContent = 'Please enter a valid value to convert.';
+      return;
+    }
+
+    if (type === 'temperature') {
+      let celsiusValue;
+      if (fromUnit === 'C') celsiusValue = value;
+      else if (fromUnit === 'F') celsiusValue = (value - 32) * 5 / 9;
+      else if (fromUnit === 'K') celsiusValue = value - 273.15;
+
+      let convertedValue;
+      if (toUnit === 'C') convertedValue = celsiusValue;
+      else if (toUnit === 'F') convertedValue = (celsiusValue * 9 / 5) + 32;
+      else if (toUnit === 'K') convertedValue = celsiusValue + 273.15;
+
+      resultBox.textContent = `${value} ${units[type].names[fromUnit]} = ${convertedValue.toFixed(2)} ${units[type].names[toUnit]}`;
+      return;
+    }
+
+    const baseValue = value * units[type].units[fromUnit];
+    const convertedValue = baseValue / units[type].units[toUnit];
+    const result = convertedValue.toFixed(6).replace(/\.?0+$/, '');
+
+    resultBox.textContent = `${value} ${units[type].names[fromUnit]} = ${result} ${units[type].names[toUnit]}`;
+  }
+
+  function showConstant() {
+    const selected = document.getElementById('constantSelect').value;
+    const constantValue = document.getElementById('constantValue');
+    constantValue.textContent = constants[selected] || '';
+  }
+
+  window.onload = updateUnitOptions;
+</script>
+</body>
+</html>
